@@ -1,0 +1,49 @@
+name: Update Canary version
+
+on:
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: pip install beautifulsoup4
+
+      - name: Run get_latest_studio_url
+        id: studio_url
+        run: |
+          python -c "from snap.local.get_latest import get_latest_studio_url; version, url = get_latest_studio_url(); open('latest_url.txt', 'w').write(url); open('lalest_version.txt', 'w').write(version)"
+
+      - name: Read new URL
+        id: read_url
+        run: echo "url=$(cat latest_url.txt)" >> $GITHUB_OUTPUT
+
+      - name: Read new Version
+        id: read_version
+        run: echo "version=$(cat latest_version.txt)" >> $GITHUB_OUTPUT
+
+      - name: Update url in snapcraft.yaml
+        run: |
+          sed -i "s|^\(\s*source:\s*\).*|\1${{ steps.read_url.outputs.url }}|" snap/snapcraft.yaml
+
+      - name: Update version in snapcraft.yaml
+        run: |
+          sed -i "s|^\(\s*version:\s*\).*|\1${{ steps.read_version.outputs.version }}|" snap/snapcraft.yaml
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update canary version"
+          branch: update-canary-version${{ steps.read_version.outputs.version }}
+          title: "Update android studio canary version"
+          body: "Automatically updated the canary version to ${{ steps.read_version.outputs.version }}"
