@@ -25,12 +25,13 @@ jobs:
     - name: Run get_latest_studio_url
       id: studio_url
       run: |
-        python -c "
+        python <<EOF
 from snap.local.get_latest import get_latest_studio_url
 version, url = get_latest_studio_url()
 with open('latest_url.txt', 'w') as f:
     f.write(url)
-"
+EOF
+        
 
     - name: Read new URL
       id: read_url
