@@ -3,49 +3,47 @@ name: Update Snapcraft Studio URL
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 3 * * *'  # Runs daily at 03:00 UTC
+    - cron: '0 3 * * *'  # Optional: runs daily at 3AM UTC
 
 jobs:
   update-snapcraft-url:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.x'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
 
-    - name: Install dependencies
-      run: |
-        pip install beautifulsoup4
+      - name: Install dependencies
+        run: |
+          pip install beautifulsoup4
 
-    - name: Run get_latest_studio_url
-      id: studio_url
-      run: |
-        python <<EOF
-from snap.local.get_latest import get_latest_studio_url
+      - name: Run get_latest_studio_url
+        id: studio_url
+        run: |
+          echo "from snap.local.get_latest import get_latest_studio_url
 version, url = get_latest_studio_url()
 with open('latest_url.txt', 'w') as f:
-    f.write(url)
-EOF
+    f.write(url)" > script.py
+          python script.py
 
-    - name: Read new URL
-      id: read_url
-      run: echo "url=$(cat latest_url.txt)" >> $GITHUB_OUTPUT
+      - name: Read new URL
+        id: read_url
+        run: echo "url=$(cat latest_url.txt)" >> $GITHUB_OUTPUT
 
-    - name: Update snapcraft.yaml
-      run: |
-        sed -i "s|^\(\s*source:\s*\).*|\1${{ steps.read_url.outputs.url }}|" snap/snapcraft.yaml
+      - name: Update snapcraft.yaml
+        run: |
+          sed -i "s|^\(\s*source:\s*\).*|\1${{ steps.read_url.outputs.url }}|" snap/snapcraft.yaml
 
-    - name: Create Pull Request
-      uses: peter-evans/create-pull-request@v6
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        commit-message: "chore: update snapcraft studio URL"
-        branch: update-studio-url
-        title: "Update Snapcraft Studio URL"
-        body: "Automatically updated the Snapcraft studio source URL."
-        author: GitHub Action <action@github.com>
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update snapcraft studio URL"
+          branch: update-studio-url
+          title: "Update Snapcraft Studio URL"
+          body: "Automatically updated the Snapcraft studio source URL."
