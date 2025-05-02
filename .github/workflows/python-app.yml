@@ -31,7 +31,6 @@ version, url = get_latest_studio_url()
 with open('latest_url.txt', 'w') as f:
     f.write(url)
 EOF
-        
 
     - name: Read new URL
       id: read_url
