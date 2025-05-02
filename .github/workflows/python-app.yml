@@ -2,15 +2,12 @@ name: Update Snapcraft Studio URL
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 3 * * *'  # Optional: runs daily at 3AM UTC
 
 jobs:
-  update-snapcraft-url:
+  update:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v3
 
       - name: Set up Python
@@ -19,17 +16,12 @@ jobs:
           python-version: '3.x'
 
       - name: Install dependencies
-        run: |
-          pip install beautifulsoup4
+        run: pip install beautifulsoup4
 
       - name: Run get_latest_studio_url
         id: studio_url
         run: |
-          echo "from snap.local.get_latest import get_latest_studio_url
-version, url = get_latest_studio_url()
-with open('latest_url.txt', 'w') as f:
-    f.write(url)" > script.py
-          python script.py
+          python -c "from snap.local.get_latest import get_latest_studio_url; version, url = get_latest_studio_url(); open('latest_url.txt', 'w').write(url)"
 
       - name: Read new URL
         id: read_url
